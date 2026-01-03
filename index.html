@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Private Ltd Debenture Issuance Strategy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #F8FAFC; color: #1E293B; }
+        .chart-container { position: relative; width: 100%; max-width: 600px; margin: 0 auto; height: 300px; max-height: 400px; }
+        .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(226, 232, 240, 0.8); }
+        .step-line { position: absolute; left: 24px; top: 0; bottom: 0; width: 2px; background-color: #E2E8F0; z-index: 0; }
+        .active-tab { border-bottom: 2px solid #0F172A; color: #0F172A; font-weight: 600; }
+        .inactive-tab { color: #64748B; }
+        .range-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; background: #0F172A; cursor: pointer; border-radius: 50%; }
+        .range-slider { -webkit-appearance: none; width: 100%; height: 6px; background: #CBD5E1; border-radius: 5px; outline: none; }
+        .alert-box { transition: all 0.3s ease; }
+    </style>
+    <!-- Chosen Palette: Corporate Trust (Navy #0F172A, Slate #64748B, White #FFFFFF, Alert Red #EF4444, Success Green #10B981) -->
+    <!-- Application Structure Plan: 
+         1. Hero/Dashboard: Immediate simulation of the user's primary goal (500 ppl) to reveal the legal hurdle immediately.
+         2. The Framework: Explaining Debentures vs Equity (addressing the 33% stake).
+         3. The Process: Step-by-step timeline for execution.
+         4. The Strategy Room: Specifically addressing the 200 vs 500 limit with workarounds.
+    -->
+    <!-- Visualization & Content Choices:
+         - Simulator: Inputs for Investors/Amount -> Output: Total Raise & Compliance Status. Goal: Show Section 42 limit.
+         - Equity Chart: Pie chart. Goal: Show that 33% stake remains unchanged.
+         - Roadmap: Vertical interactive list. Goal: Clarify the complex legal workflow.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="bg-slate-50 min-h-screen flex flex-col">
+
+    <!-- Navigation -->
+    <nav class="bg-white border-b border-slate-200 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <span class="text-2xl font-bold text-slate-900">Debenture<span class="text-blue-600">Strategist</span></span>
+                </div>
+                <div class="hidden md:flex space-x-8 items-center">
+                    <button onclick="switchTab('simulator')" id="nav-simulator" class="active-tab px-3 py-2 text-sm">Simulator</button>
+                    <button onclick="switchTab('basics')" id="nav-basics" class="inactive-tab px-3 py-2 text-sm transition hover:text-slate-900">Basics & Equity</button>
+                    <button onclick="switchTab('process')" id="nav-process" class="inactive-tab px-3 py-2 text-sm transition hover:text-slate-900">Step-by-Step</button>
+                    <button onclick="switchTab('limits')" id="nav-limits" class="inactive-tab px-3 py-2 text-sm transition hover:text-slate-900">Overcoming Limits</button>
+                </div>
+                <!-- Mobile Menu Button (Hidden logic for brevity, assuming desktop first per request, but layout is responsive) -->
+            </div>
+        </div>
+        <!-- Mobile Tab Bar -->
+        <div class="md:hidden flex justify-around border-t border-slate-200 bg-white py-2">
+            <button onclick="switchTab('simulator')" class="text-xs font-medium p-2">Simulate</button>
+            <button onclick="switchTab('basics')" class="text-xs font-medium p-2">Basics</button>
+            <button onclick="switchTab('process')" class="text-xs font-medium p-2">Process</button>
+            <button onclick="switchTab('limits')" class="text-xs font-medium p-2">Limits</button>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-grow container mx-auto px-4 py-8 max-w-6xl">
+
+        <!-- SECTION 1: SIMULATOR (Home) -->
+        <section id="simulator" class="space-y-8 animate-fade-in">
+            <div class="text-center max-w-3xl mx-auto mb-10">
+                <h1 class="text-3xl md:text-4xl font-bold text-slate-900 mb-4">Compliance Check & Calculator</h1>
+                <p class="text-slate-600 text-lg">
+                    You mentioned wanting to issue to <span class="font-semibold text-slate-900">500 persons</span>. 
+                    Let's test if that's legally possible for a Private Limited Company under the Companies Act, 2013.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Controls -->
+                <div class="glass-panel p-6 rounded-2xl shadow-sm">
+                    <h3 class="text-lg font-semibold mb-6 flex items-center">
+                        <span class="w-2 h-6 bg-blue-600 rounded-full mr-3"></span>
+                        Issuance Parameters
+                    </h3>
+                    
+                    <div class="space-y-8">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-2">
+                                Number of Investors
+                                <span id="investor-val" class="float-right font-bold text-blue-600">200</span>
+                            </label>
+                            <input type="range" id="investor-slider" min="10" max="600" step="10" value="200" class="range-slider" oninput="updateSimulation()">
+                            <div class="flex justify-between text-xs text-slate-400 mt-1">
+                                <span>10</span>
+                                <span>200 (Legal Limit)</span>
+                                <span>600</span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-2">
+                                Investment per Person (INR)
+                                <span id="amount-val" class="float-right font-bold text-blue-600">5,00,000</span>
+                            </label>
+                            <input type="range" id="amount-slider" min="200000" max="2000000" step="100000" value="500000" class="range-slider" oninput="updateSimulation()">
+                            <div class="flex justify-between text-xs text-slate-400 mt-1">
+                                <span>2 Lakhs</span>
+                                <span>20 Lakhs</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-8 p-4 bg-slate-50 rounded-lg border border-slate-200">
+                        <p class="text-sm text-slate-500">Total Capital Raised:</p>
+                        <p id="total-capital" class="text-3xl font-bold text-slate-900">₹ 10,00,00,000</p>
+                    </div>
+                </div>
+
+                <!-- Results & Analysis -->
+                <div class="flex flex-col space-y-6">
+                    <!-- Status Card -->
+                    <div id="status-card" class="alert-box p-6 rounded-2xl shadow-sm border-l-4 border-green-500 bg-white">
+                        <div class="flex items-start">
+                            <div id="status-icon" class="text-3xl mr-4">✅</div>
+                            <div>
+                                <h3 id="status-title" class="text-xl font-bold text-slate-900">Valid Private Placement</h3>
+                                <p id="status-desc" class="text-slate-600 mt-2 text-sm leading-relaxed">
+                                    You are within the limits of Section 42. A Private Limited company can issue debentures to a maximum of 200 persons in a financial year.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Visual Breakdown -->
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex-grow flex flex-col justify-center">
+                        <h4 class="text-sm font-semibold text-slate-500 mb-4 uppercase tracking-wider">Investor Cap Utilization</h4>
+                        <div class="chart-container">
+                            <canvas id="limitChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 2: BASICS & EQUITY (Hidden) -->
+        <section id="basics" class="hidden space-y-8 animate-fade-in">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                <div>
+                    <h2 class="text-3xl font-bold text-slate-900 mb-6">Why Debentures?</h2>
+                    <p class="text-slate-700 text-lg leading-relaxed mb-6">
+                        Debentures are essentially loans taken by the company from the public (or specific individuals). Unlike shares, they do not carry voting rights.
+                    </p>
+                    <ul class="space-y-4">
+                        <li class="flex items-start">
+                            <span class="flex-shrink-0 h-6 w-6 flex items-center justify-center rounded-full bg-blue-100 text-blue-600 font-bold text-sm mt-1">1</span>
+                            <span class="ml-4 text-slate-600"><strong>Zero Dilution:</strong> You mentioned 3 partners with 33% each. Issuing debentures ensures your ownership percentages remain exactly the same.</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="flex-shrink-0 h-6 w-6 flex items-center justify-center rounded-full bg-blue-100 text-blue-600 font-bold text-sm mt-1">2</span>
+                            <span class="ml-4 text-slate-600"><strong>Control:</strong> Debenture holders are creditors, not owners. They cannot interfere in daily management (unless you default).</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="flex-shrink-0 h-6 w-6 flex items-center justify-center rounded-full bg-blue-100 text-blue-600 font-bold text-sm mt-1">3</span>
+                            <span class="ml-4 text-slate-600"><strong>Tax Benefit:</strong> Interest paid on debentures is a tax-deductible expense for the company.</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
+                    <h3 class="text-center font-bold text-slate-800 mb-4">Post-Issuance Ownership Structure</h3>
+                    <div class="chart-container">
+                        <canvas id="equityChart"></canvas>
+                    </div>
+                    <p class="text-center text-xs text-slate-400 mt-4">Notice: Even after raising crores, the pie remains 33/33/33.</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
+                <div class="p-6 bg-blue-50 rounded-xl border border-blue-100">
+                    <h4 class="font-bold text-blue-900 mb-2">Secured vs Unsecured</h4>
+                    <p class="text-sm text-blue-800">You can issue Secured (backed by assets) or Unsecured debentures. Secured are more attractive to investors but require creating a charge on assets.</p>
+                </div>
+                <div class="p-6 bg-indigo-50 rounded-xl border border-indigo-100">
+                    <h4 class="font-bold text-indigo-900 mb-2">Convertibility</h4>
+                    <p class="text-sm text-indigo-800">You can choose Non-Convertible (NCDs) or Convertible (CCD/OCD). Since you want to protect equity, choose <strong>Non-Convertible</strong>.</p>
+                </div>
+                <div class="p-6 bg-slate-50 rounded-xl border border-slate-200">
+                    <h4 class="font-bold text-slate-900 mb-2">Tenure</h4>
+                    <p class="text-sm text-slate-700">Debentures for a Pvt Ltd usually cannot exceed 10 years (for general projects) or 30 years (infrastructure).</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 3: PROCESS (Hidden) -->
+        <section id="process" class="hidden space-y-8 animate-fade-in">
+            <div class="text-center mb-10">
+                <h2 class="text-3xl font-bold text-slate-900">Step-by-Step Execution Guide</h2>
+                <p class="text-slate-500 mt-2">The legal procedure for Private Placement (Section 42 & 71)</p>
+            </div>
+
+            <div class="relative max-w-4xl mx-auto pl-8 md:pl-0">
+                <!-- Timeline Line -->
+                <div class="hidden md:block absolute left-1/2 top-0 bottom-0 w-0.5 bg-slate-200 -ml-px"></div>
+
+                <!-- Step 1 -->
+                <div class="relative mb-12 md:flex md:justify-between items-center group">
+                    <div class="hidden md:block md:w-5/12 text-right pr-8">
+                        <h3 class="text-lg font-bold text-slate-900">Board Meeting</h3>
+                        <p class="text-sm text-slate-600 mt-1">Approve the offer letter (PAS-4), identify the specific investors, and call for an EGM.</p>
+                    </div>
+                    <div class="absolute left-0 md:left-1/2 -ml-3 md:-ml-4 w-6 h-6 md:w-8 md:h-8 rounded-full bg-blue-600 border-4 border-white shadow flex items-center justify-center text-white text-xs z-10">1</div>
+                    <div class="ml-10 md:ml-0 md:w-5/12 pl-8 md:bg-transparent bg-white p-4 rounded border md:border-none border-slate-200 shadow-sm md:shadow-none">
+                        <span class="md:hidden text-lg font-bold text-slate-900 block mb-2">Board Meeting</span>
+                        <span class="md:hidden text-sm text-slate-600 block mb-2">Approve the offer letter (PAS-4), identify the specific investors, and call for an EGM.</span>
+                        <div class="text-xs font-mono bg-slate-100 p-2 rounded inline-block text-slate-600">Doc: Board Resolution</div>
+                    </div>
+                </div>
+
+                <!-- Step 2 -->
+                <div class="relative mb-12 md:flex md:justify-between items-center group">
+                    <div class="order-2 md:w-5/12 pl-8">
+                        <h3 class="text-lg font-bold text-slate-900">EGM & Special Resolution</h3>
+                        <p class="text-sm text-slate-600 mt-1">Hold an Extraordinary General Meeting. Pass a Special Resolution (75% vote) to approve Private Placement and Borrowing Limits.</p>
+                        <div class="mt-2 text-xs font-mono bg-slate-100 p-2 rounded inline-block text-slate-600">Form: MGT-14</div>
+                    </div>
+                    <div class="absolute left-0 md:left-1/2 -ml-3 md:-ml-4 w-6 h-6 md:w-8 md:h-8 rounded-full bg-slate-200 border-4 border-white shadow flex items-center justify-center text-slate-600 text-xs z-10">2</div>
+                    <div class="md:block hidden md:w-5/12 text-right pr-8 order-1"></div>
+                </div>
+
+                <!-- Step 3 -->
+                <div class="relative mb-12 md:flex md:justify-between items-center group">
+                    <div class="hidden md:block md:w-5/12 text-right pr-8">
+                        <h3 class="text-lg font-bold text-slate-900">Circulate PAS-4</h3>
+                        <p class="text-sm text-slate-600 mt-1">Send the Private Placement Offer Letter (Form PAS-4) strictly to the identified persons. Do not advertise publicly.</p>
+                    </div>
+                    <div class="absolute left-0 md:left-1/2 -ml-3 md:-ml-4 w-6 h-6 md:w-8 md:h-8 rounded-full bg-slate-200 border-4 border-white shadow flex items-center justify-center text-slate-600 text-xs z-10">3</div>
+                    <div class="ml-10 md:ml-0 md:w-5/12 pl-8 md:bg-transparent bg-white p-4 rounded border md:border-none border-slate-200 shadow-sm md:shadow-none">
+                        <span class="md:hidden text-lg font-bold text-slate-900 block mb-2">Circulate PAS-4</span>
+                        <span class="md:hidden text-sm text-slate-600 block mb-2">Send PAS-4 to identified persons. No public ads.</span>
+                        <div class="text-xs font-mono bg-slate-100 p-2 rounded inline-block text-slate-600">Action: Email/Reg Post</div>
+                    </div>
+                </div>
+
+                <!-- Step 4 -->
+                <div class="relative mb-12 md:flex md:justify-between items-center group">
+                    <div class="order-2 md:w-5/12 pl-8">
+                        <h3 class="text-lg font-bold text-slate-900">Separate Bank Account</h3>
+                        <p class="text-sm text-slate-600 mt-1">Open a separate bank account to receive subscription money. Funds cannot be used until allotment is complete.</p>
+                    </div>
+                    <div class="absolute left-0 md:left-1/2 -ml-3 md:-ml-4 w-6 h-6 md:w-8 md:h-8 rounded-full bg-slate-200 border-4 border-white shadow flex items-center justify-center text-slate-600 text-xs z-10">4</div>
+                    <div class="md:block hidden md:w-5/12 text-right pr-8 order-1"></div>
+                </div>
+
+                <!-- Step 5 -->
+                <div class="relative mb-12 md:flex md:justify-between items-center group">
+                    <div class="hidden md:block md:w-5/12 text-right pr-8">
+                        <h3 class="text-lg font-bold text-slate-900">Allotment & Filing</h3>
+                        <p class="text-sm text-slate-600 mt-1">Allot debentures within 60 days of receiving funds. File PAS-3 (Return of Allotment) with ROC.</p>
+                    </div>
+                    <div class="absolute left-0 md:left-1/2 -ml-3 md:-ml-4 w-6 h-6 md:w-8 md:h-8 rounded-full bg-slate-200 border-4 border-white shadow flex items-center justify-center text-slate-600 text-xs z-10">5</div>
+                    <div class="ml-10 md:ml-0 md:w-5/12 pl-8 md:bg-transparent bg-white p-4 rounded border md:border-none border-slate-200 shadow-sm md:shadow-none">
+                        <span class="md:hidden text-lg font-bold text-slate-900 block mb-2">Allotment & Filing</span>
+                        <span class="md:hidden text-sm text-slate-600 block mb-2">Allot within 60 days. File PAS-3.</span>
+                        <div class="text-xs font-mono bg-slate-100 p-2 rounded inline-block text-slate-600">Form: PAS-3</div>
+                    </div>
+                </div>
+
+                 <!-- Step 6 -->
+                 <div class="relative mb-12 md:flex md:justify-between items-center group">
+                    <div class="order-2 md:w-5/12 pl-8">
+                        <h3 class="text-lg font-bold text-slate-900">Certificates & Register</h3>
+                        <p class="text-sm text-slate-600 mt-1">Issue Debenture Certificates (Form SH-1) within 6 months. Maintain Register of Debenture Holders (MGT-2).</p>
+                    </div>
+                    <div class="absolute left-0 md:left-1/2 -ml-3 md:-ml-4 w-6 h-6 md:w-8 md:h-8 rounded-full bg-slate-200 border-4 border-white shadow flex items-center justify-center text-slate-600 text-xs z-10">6</div>
+                    <div class="md:block hidden md:w-5/12 text-right pr-8 order-1"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 4: LIMITS & STRATEGY (Hidden) -->
+        <section id="limits" class="hidden space-y-8 animate-fade-in">
+            <div class="bg-red-50 border-l-4 border-red-500 p-6 rounded-r shadow-sm">
+                <h2 class="text-2xl font-bold text-red-900">The "500 Person" Problem</h2>
+                <p class="mt-2 text-red-800">
+                    <strong>Section 42 of Companies Act, 2013:</strong> A private placement offer can be made to a maximum of <strong>200 persons</strong> in a financial year. 
+                    <br><br>
+                    If you offer to 500 persons, it is deemed a <strong>Public Offer</strong>. Since you are a Private Limited company, you are legally prohibited from making a public offer. Doing so attracts heavy penalties (amount raised or 2 Cr, whichever is higher) and refund orders.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Strategy 1 -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:shadow-md transition">
+                    <div class="h-10 w-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600 font-bold mb-4">1</div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-2">Increase Ticket Size</h3>
+                    <p class="text-sm text-slate-600 mb-4">Instead of 500 people at 2L each, target 200 people at 5L each. The total amount raised remains the same (10 Cr).</p>
+                    <div class="bg-slate-50 p-3 rounded text-sm font-mono text-slate-700">
+                        Target: 200 Investors<br>
+                        Entry: ₹ 5,00,000<br>
+                        Result: ₹ 10 Cr ✅
+                    </div>
+                </div>
+
+                <!-- Strategy 2 -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:shadow-md transition">
+                    <div class="h-10 w-10 bg-purple-100 rounded-lg flex items-center justify-center text-purple-600 font-bold mb-4">2</div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-2">Staggered Issuance</h3>
+                    <p class="text-sm text-slate-600 mb-4">Issue to 200 people in Financial Year 1 (e.g., March). Issue to another 200 in Financial Year 2 (April). This is risky if deemed a continuous scheme, consult a CS.</p>
+                    <div class="bg-slate-50 p-3 rounded text-sm font-mono text-slate-700">
+                        FY 2024: 200 Pax<br>
+                        FY 2025: 200 Pax<br>
+                        Result: 400 Pax over 13 months ⚠️
+                    </div>
+                </div>
+
+                <!-- Strategy 3 -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:shadow-md transition">
+                    <div class="h-10 w-10 bg-green-100 rounded-lg flex items-center justify-center text-green-600 font-bold mb-4">3</div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-2">The Exclusions</h3>
+                    <p class="text-sm text-slate-600 mb-4">The 200 limit excludes Qualified Institutional Buyers (QIBs) and Employees (under stock option schemes). However, for simple debentures, these exclusions rarely apply to friends/family.</p>
+                </div>
+
+                <!-- Strategy 4 -->
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 hover:shadow-md transition">
+                    <div class="h-10 w-10 bg-orange-100 rounded-lg flex items-center justify-center text-orange-600 font-bold mb-4">4</div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-2">The Borrowing Limit</h3>
+                    <p class="text-sm text-slate-600 mb-4">Check Section 180(1)(c). If Debentures + Existing Loans > (Paid-up Capital + Free Reserves), you need a Special Resolution. As 3 partners with 100% control, this is easy for you to pass.</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // State Management
+        const state = {
+            investors: 200,
+            amountPerPerson: 500000,
+            limit: 200
+        };
+
+        // DOM Elements
+        const elInvestorSlider = document.getElementById('investor-slider');
+        const elAmountSlider = document.getElementById('amount-slider');
+        const elInvestorVal = document.getElementById('investor-val');
+        const elAmountVal = document.getElementById('amount-val');
+        const elTotalCapital = document.getElementById('total-capital');
+        const elStatusCard = document.getElementById('status-card');
+        const elStatusIcon = document.getElementById('status-icon');
+        const elStatusTitle = document.getElementById('status-title');
+        const elStatusDesc = document.getElementById('status-desc');
+
+        // Charts
+        let limitChartInstance = null;
+        let equityChartInstance = null;
+
+        // --- Core Logic ---
+
+        function formatCurrency(num) {
+            return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(num);
+        }
+
+        function updateSimulation() {
+            // Get Values
+            state.investors = parseInt(elInvestorSlider.value);
+            state.amountPerPerson = parseInt(elAmountSlider.value);
+
+            // Update UI Numbers
+            elInvestorVal.textContent = state.investors;
+            elAmountVal.textContent = formatCurrency(state.amountPerPerson).replace('₹', '');
+            
+            const total = state.investors * state.amountPerPerson;
+            elTotalCapital.textContent = formatCurrency(total);
+
+            // Logic Check Section 42
+            if (state.investors > 200) {
+                // Illegal State
+                elStatusCard.className = "alert-box p-6 rounded-2xl shadow-sm border-l-4 border-red-500 bg-red-50";
+                elStatusIcon.textContent = "🛑";
+                elStatusTitle.textContent = "DEEMED PUBLIC ISSUE (ILLEGAL)";
+                elStatusTitle.className = "text-xl font-bold text-red-700";
+                elStatusDesc.textContent = "You have crossed the 200 person limit. A Private Limited company CANNOT invite subscription from >200 persons (aggregate in FY). This action would be treated as a Public Issue, requiring a prospectus and listing, which is not allowed for Pvt Ltd.";
+            } else {
+                // Valid State
+                elStatusCard.className = "alert-box p-6 rounded-2xl shadow-sm border-l-4 border-green-500 bg-white";
+                elStatusIcon.textContent = "✅";
+                elStatusTitle.textContent = "Valid Private Placement";
+                elStatusTitle.className = "text-xl font-bold text-slate-900";
+                elStatusDesc.textContent = "You are within the 200 person limit defined by Section 42. You can proceed with a Private Placement Offer Letter (PAS-4) to these specific individuals.";
+            }
+
+            updateLimitChart();
+        }
+
+        // --- Navigation ---
+        function switchTab(tabId) {
+            // Hide all sections
+            ['simulator', 'basics', 'process', 'limits'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+                document.getElementById('nav-'+id).className = "inactive-tab px-3 py-2 text-sm transition hover:text-slate-900";
+            });
+
+            // Show active section
+            document.getElementById(tabId).classList.remove('hidden');
+            document.getElementById('nav-'+tabId).className = "active-tab px-3 py-2 text-sm";
+
+            // Trigger chart renders if needed
+            if(tabId === 'basics' && !equityChartInstance) initEquityChart();
+        }
+
+        // --- Charts ---
+
+        function initLimitChart() {
+            const ctx = document.getElementById('limitChart').getContext('2d');
+            limitChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Current Investors', 'Legal Maximum'],
+                    datasets: [{
+                        label: 'Headcount',
+                        data: [200, 200],
+                        backgroundColor: ['#3B82F6', '#94A3B8'],
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, max: 600 }
+                    },
+                    plugins: {
+                        legend: { display: false }
+                    }
+                }
+            });
+        }
+
+        function updateLimitChart() {
+            if(!limitChartInstance) return;
+            
+            limitChartInstance.data.datasets[0].data[0] = state.investors;
+            
+            // Color Logic for Bar
+            if(state.investors > 200) {
+                limitChartInstance.data.datasets[0].backgroundColor[0] = '#EF4444'; // Red
+            } else {
+                limitChartInstance.data.datasets[0].backgroundColor[0] = '#10B981'; // Green
+            }
+            
+            limitChartInstance.update();
+        }
+
+        function initEquityChart() {
+            const ctx = document.getElementById('equityChart').getContext('2d');
+            equityChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Partner 1', 'Partner 2', 'Partner 3', 'Debenture Holders'],
+                    datasets: [{
+                        data: [33.3, 33.3, 33.3, 0],
+                        backgroundColor: ['#1E293B', '#334155', '#475569', '#CBD5E1'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    if(context.label === 'Debenture Holders') return 'Debenture Holders: 0% Equity (Debt Only)';
+                                    return context.label + ': ' + context.parsed + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Init
+        window.onload = function() {
+            initLimitChart();
+            updateSimulation();
+        };
+
+    </script>
+</body>
+</html>
